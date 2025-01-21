@@ -2,10 +2,10 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from decorators import decor
+from decorators import make_line_less_70
 
 
-@decor
+@make_line_less_70
 def write_to_file(file_name, text):
   with open(f"AWS_{file_name}.txt", 'a') as file:
     file.write(text + '\n')
@@ -14,6 +14,8 @@ def write_to_file(file_name, text):
 def get_text(driver, counter):
   try:
     element = driver.find_elements(by=By.XPATH, value=f"""/html/body/div[2]/div/div/div[2]/main/div[3]/div/div[4]/div[1]/div/div/div/div[2]/div/div/div/div/div[4]/div[1]/p[{counter}]""")
+    if len(element) == 0:
+      element = driver.find_elements(by=By.XPATH, value=f"""/html/body/div[2]/div/div/div[2]/main/div[2]/div[1]/div[1]/div/div/div[4]/div[1]/p[{counter}]""")
   except NoSuchElementException:
     return None
   if element:
@@ -22,35 +24,34 @@ def get_text(driver, counter):
     return
 
 
-def get_element(driver, element):
-  root = str(element.text)
-  element.click()
+def get_element(driver, aws_service_element):
+  service_name = str(aws_service_element.text)
+  aws_service_element.click()
   try:
-    element1 = WebDriverWait(driver, 10).until(
+    element = WebDriverWait(driver, 10).until(
           EC.visibility_of_element_located((By.XPATH, f"""/html/body/div[2]/div/div/div[2]/main/div[1]/div/div[1]/div[4]/div/section[1]/div/div/div/div/div/div/ol/li[1]/div/div[1]/div/h3/span/a/span"""))
       )
   except NoSuchElementException:
-    element1 = WebDriverWait(driver, 10).until(
+    element = WebDriverWait(driver, 10).until(
           EC.visibility_of_element_located((By.XPATH, f"""/html/body/div[2]/div/div/div[2]/main/div[1]/div/div[1]/div[4]/div/section[1]/div[2]/div/div/div/div/div/ol/li[1]/div/div[1]/div/h3/span/a/span"""))
       )
-  counter = 2
-  text_counter = 1
-  text = "Help"
-  while element1:
+  element_counter = 2
+  text = "foo"
+  while element:
     try:
-      print(element1)
-      element1.click()
+      element.click()
+      text_counter = 1
       while text:
         text = get_text(driver, text_counter)
-        write_to_file(root, str(text))
+        write_to_file(service_name, str(text))
         text_counter += 1
       driver.back()
       driver.implicitly_wait(1)
-      element1 = driver.find_element(by=By.XPATH, 
+      element = driver.find_element(by=By.XPATH, 
                             value=f"""/html/body/div[2]/div/div/div[2]/main/div[1]
                             /div/div[1]/div[4]/div/section[1]/div/div/div/div/div
-                            /div/ol/li[{counter}]/div/div[1]/div/h3/span/a/span""")
-      counter += 1
+                            /div/ol/li[{element_counter}]/div/div[1]/div/h3/span/a/span""")
+      element_counter += 1
     except NoSuchElementException:
       print("Help")
       break
